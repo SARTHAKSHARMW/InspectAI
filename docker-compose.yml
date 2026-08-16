@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: inspectai_db
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres_password}
+      POSTGRES_DB: inspectai
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  ai-service:
+    build:
+      context: ./ai-service
+      dockerfile: Dockerfile
+    container_name: inspectai_ai
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend/backend
+      dockerfile: Dockerfile
+    container_name: inspectai_backend
+    environment:
+      - DB_URL=jdbc:postgresql://db:5432/inspectai
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres_password}
+      - JWT_SECRET=${JWT_SECRET:-InspectAI-Super-Secret-Key-For-JWT-2026-This-Must-Be-Long}
+      - ai.service.url=http://ai-service:8000
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # In a real deployment, this would point to the public URL of the backend
+        - VITE_API_BASE_URL=http://localhost:8080
+    container_name: inspectai_frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

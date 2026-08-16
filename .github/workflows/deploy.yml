@@ -1,0 +1,85 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+          
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+        
+      - name: Build frontend
+        working-directory: frontend
+        run: npm run build
+        env:
+          VITE_API_BASE_URL: ${{ secrets.PROD_API_URL || 'http://localhost:8080' }}
+
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+          
+      - name: Build with Maven
+        working-directory: backend/backend
+        run: ./mvnw package -DskipTests
+
+  validate-ai-service:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          
+      - name: Install dependencies
+        working-directory: ai-service
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          
+      # Add linting or tests here if available. For now we just verify dependencies install cleanly.
+
+  docker-build:
+    needs: [build-frontend, build-backend, validate-ai-service]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Frontend Docker Image
+        working-directory: frontend
+        run: docker build -t inspectai-frontend .
+        
+      - name: Build Backend Docker Image
+        working-directory: backend/backend
+        run: docker build -t inspectai-backend .
+        
+      - name: Build AI Service Docker Image
+        working-directory: ai-service
+        run: docker build -t inspectai-ai-service .

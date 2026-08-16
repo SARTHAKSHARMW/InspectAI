@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-gray-200 font-sans antialiased;
+    overflow-x: hidden;
+  }
+}
+
+@layer components {
+  /* Industrial button */
+  .btn-primary {
+    @apply relative px-6 py-2 bg-primary/10 text-primary border border-primary/30 
+           hover:bg-primary/20 hover:border-primary transition-all duration-300 
+           font-mono text-sm uppercase tracking-wider backdrop-blur-sm shadow-[0_0_15px_rgba(0,210,255,0.1)] hover:shadow-[0_0_20px_rgba(0,210,255,0.3)];
+  }
+
+  .btn-secondary {
+    @apply relative px-6 py-2 bg-panel_light/50 text-gray-300 border border-border 
+           hover:bg-panel hover:text-white hover:border-gray-500 transition-all duration-300 
+           font-mono text-sm uppercase tracking-wider backdrop-blur-sm;
+  }
+
+  /* Industrial Card */
+  .panel {
+    @apply bg-panel/80 backdrop-blur-md border border-border shadow-lg relative overflow-hidden;
+  }
+  
+  .panel::before {
+    content: '';
+    @apply absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-primary/30 to-transparent;
+  }
+
+  /* Input */
+  .input-field {
+    @apply bg-background border border-border px-4 py-2 text-white font-mono text-sm focus:outline-none focus:border-primary/50 transition-colors w-full;
+  }
+}
+
+/* Custom Scrollbar for a technical feel */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #121214; 
+}
+::-webkit-scrollbar-thumb {
+  background: #2a2a2e; 
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #00d2ff; 
+}
+
+/* Three.js canvas should fill the container */
+#canvas-container {
+  width: 100%;
+  height: 100%;
+}
