@@ -29,7 +29,10 @@ target/
 *.war
 *.ear
 *.class
-.mvn/
+**/.mvn/*
+!**/.mvn/wrapper
+**/.mvn/wrapper/*
+!backend/backend/.mvn/wrapper/maven-wrapper.properties
 !mvnw
 !mvnw.cmd
 
