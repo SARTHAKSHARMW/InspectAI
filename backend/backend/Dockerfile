@@ -1,4 +1,4 @@
-FROM maven:3.9-eclipse-temurin-21 as build
+FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY .mvn .mvn
@@ -9,10 +9,7 @@ RUN ./mvnw package -DskipTests
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-# Install system dependencies required by OpenCV and YOLO
-RUN apk add --no-cache \
-    libgl \
-    glib
+
 COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
 ENTRYPOINT ["java", "-jar", "app.jar"]
